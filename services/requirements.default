@@ -1,0 +1,2 @@
+Django==6.1.1
+django-mongodb-backend==6.1.0
