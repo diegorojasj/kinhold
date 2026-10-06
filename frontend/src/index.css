@@ -1,0 +1,268 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/bricolage-grotesque';
+@import '@fontsource-variable/figtree';
+
+/* Theme is chosen in Config (system / light / dark) and written to <html data-theme>. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+/*
+ * Kinhold palette: warm paper + ink, and one colour per "room" of the house
+ * (list = basil, chores = iris, money = saffron, bills = coral). Each screen sets
+ * --accent so shared components pick up the right colour automatically.
+ */
+@theme static {
+  --font-sans: 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Bricolage Grotesque Variable', 'Figtree Variable', ui-sans-serif, system-ui, sans-serif;
+
+  --color-paper: #f5f0e8;
+  --color-card: #fffdf9;
+  --color-sunk: #ede6da;
+  --color-line: #e4dccf;
+  --color-ink: #1d1a16;
+  --color-ink-soft: #5f574d;
+  --color-ink-faint: #776d61;
+
+  /* Light-theme values keep ≥4.5:1 for white text on fills and for small coloured text on paper.
+     Saffron is too light for that, so it gets dark text on fills (--color-on-saffron) and a darker
+     -ink variant for text. */
+  --color-basil: #22804a;
+  --color-iris: #6a55d6;
+  --color-saffron: #d98a12;
+  --color-saffron-ink: #9a5a00;
+  --color-coral: #c8452e;
+  --color-sky: #1f6fa8;
+  --color-on-accent: #ffffff;
+  --color-on-saffron: #1d1a16;
+
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+
+  --animate-pop: pop 360ms var(--ease-spring);
+  --animate-rise: rise 420ms var(--ease-out-soft) both;
+  --animate-fade: fade 200ms ease-out both;
+  --animate-shake: shake 360ms ease-in-out;
+
+  @keyframes pop {
+    0% { transform: scale(0.6); }
+    60% { transform: scale(1.15); }
+    100% { transform: scale(1); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    75% { transform: translateX(6px); }
+  }
+}
+
+[data-theme='dark'] {
+  --color-paper: #141210;
+  --color-card: #1f1c18;
+  --color-sunk: #2a2621;
+  --color-line: #322d27;
+  --color-ink: #f4eee5;
+  --color-ink-soft: #bfb4a6;
+  --color-ink-faint: #978d80;
+
+  --color-basil: #4cc47f;
+  --color-iris: #9887f0;
+  --color-saffron: #f0b13f;
+  --color-saffron-ink: #f0b13f;
+  --color-coral: #f27a63;
+  --color-sky: #5aaee8;
+  --color-on-accent: #141210;
+  --color-on-saffron: #141210;
+}
+
+/* Safe-area insets: notches, rounded corners and the home indicator on phones (needs viewport-fit=cover). */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+/* Keeps content clear of the floating mobile tab bar (h-16 + margin + home indicator). */
+@utility pb-tabbar {
+  padding-bottom: calc(6.5rem + env(safe-area-inset-bottom));
+}
+/* Floating action button / toasts sit just above the mobile tab bar. */
+@utility bottom-above-tabbar {
+  bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+    color-scheme: light;
+  }
+  html[data-theme='dark'] {
+    color-scheme: dark;
+  }
+  body {
+    overscroll-behavior-y: none;
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  button {
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  button:disabled {
+    cursor: default;
+  }
+  :focus-visible,
+  /* Choice (components/ui/choice.tsx): the native input is hidden, so its label shows the focus ring. */
+  label:has(> input.sr-only:focus-visible) {
+    outline: 2px solid var(--accent, var(--color-ink));
+    outline-offset: 2px;
+  }
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--accent, var(--color-basil)) 30%, transparent);
+  }
+}
+
+/* Shared building blocks (as utilities so variants like `md:` and `@apply` work on them). */
+@utility card {
+  @apply rounded-3xl bg-card shadow-[0_1px_0_rgb(0_0_0/0.03),0_8px_24px_-12px_rgb(60_40_20/0.18)] dark:shadow-none;
+}
+@utility field {
+  @apply w-full rounded-2xl border border-line bg-card px-4 py-3 text-base text-ink placeholder:text-ink-faint transition-[border-color,box-shadow] outline-none focus:border-(--accent) focus:ring-4 focus:ring-(--accent)/15 disabled:opacity-60;
+}
+@utility label {
+  @apply mb-1.5 block text-sm font-semibold text-ink-soft;
+}
+@utility eyebrow {
+  @apply text-xs font-bold tracking-[0.12em] text-ink-faint uppercase;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-semibold transition-[transform,background-color,opacity] duration-150 select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
+}
+@utility btn-primary {
+  @apply btn bg-ink text-paper;
+}
+@utility btn-accent {
+  @apply btn bg-(--accent) text-(--accent-fg);
+}
+@utility btn-soft {
+  @apply btn bg-(--accent)/12 text-(--accent-ink);
+}
+@utility btn-ghost {
+  @apply btn bg-sunk text-ink;
+}
+@utility btn-danger {
+  @apply btn bg-coral/12 text-coral;
+}
+@utility icon-btn {
+  @apply inline-flex size-11 shrink-0 items-center justify-center rounded-full text-ink-soft transition-[transform,background-color] hover:bg-sunk active:scale-90;
+}
+@utility chip {
+  @apply inline-flex shrink-0 items-center gap-1.5 rounded-full border border-line bg-card px-3.5 py-2 text-sm font-medium whitespace-nowrap text-ink-soft transition-[transform,background-color,border-color,color] active:scale-95;
+
+  &[aria-pressed='true'],
+  &[data-checked] {
+    @apply border-transparent bg-ink text-paper;
+  }
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Bottom sheet on phones, centred dialog from md up (see components/Sheet.tsx). */
+dialog.sheet {
+  position: fixed;
+  inset: auto 0 0 0;
+  margin: 0;
+  width: 100%;
+  max-width: 100%;
+  max-height: 94dvh;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  overflow: visible;
+}
+dialog.sheet::backdrop {
+  background: rgb(20 16 12 / 0.45);
+  backdrop-filter: blur(3px);
+  animation: fade 220ms ease-out both;
+}
+dialog.sheet[open] > .sheet-panel {
+  animation: sheet-in 380ms var(--ease-out-soft) both;
+}
+dialog.sheet[data-closing] > .sheet-panel {
+  animation: sheet-out 200ms ease-in both;
+}
+dialog.sheet[data-closing]::backdrop {
+  animation: fade 200ms ease-in reverse both;
+}
+@media (min-width: 768px) {
+  dialog.sheet {
+    inset: 0;
+    margin: auto;
+    width: min(32rem, calc(100% - 2rem));
+    height: fit-content;
+  }
+  dialog.sheet[open] > .sheet-panel {
+    animation-name: dialog-in;
+  }
+  dialog.sheet[data-closing] > .sheet-panel {
+    animation-name: dialog-out;
+  }
+}
+@keyframes sheet-in {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+@keyframes sheet-out {
+  from { transform: translateY(var(--drag, 0px)); }
+  to { transform: translateY(100%); }
+}
+@keyframes dialog-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes dialog-out {
+  to { opacity: 0; transform: translateY(8px) scale(0.98); }
+}
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must also beat inline transition styles */
+    animation-duration: 1ms !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must also beat inline transition styles */
+    animation-iteration-count: 1 !important;
+    /* biome-ignore lint/complexity/noImportantStyles: reduced motion must also beat inline transition styles */
+    transition-duration: 1ms !important;
+  }
+}
