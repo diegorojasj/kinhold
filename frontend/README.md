@@ -82,3 +82,17 @@ The stores already follow the backend contract, so swapping them for API calls i
 - Warm paper/ink palette with one colour per section (home = sky, list = basil, chores = iris, money = saffron, bills = coral; config stays neutral ink). The active section sets `--accent` / `--accent-fg` / `--accent-ink` on `<html>`, and shared components use those. Light-theme values are tuned for WCAG AA.
 - Fonts: Bricolage Grotesque (display) + Figtree (body), self-hosted via Fontsource so they work offline.
 - Shared UI lives in `src/components/` (`Sheet`, `SwipeRow`, `ui.tsx`). Feedback (haptics, sounds, confetti) lives in `src/lib/feedback.ts` and can be switched off in Config.
+
+## Code layout
+
+Files stay under ~300 lines (hard limit 400). Each screen is a folder whose `index.tsx` is the screen itself, with its editors, rows and forms next to it:
+
+```
+src/routes/<screen>/index.tsx   # the screen (lazy-loaded route)
+src/routes/<screen>/*.tsx       # its sheets, rows and forms
+src/routes/<screen>/helpers.ts  # small screen-only helpers
+src/components/ui/              # shared UI, re-exported from ui/index.ts
+src/stores/                     # one store per feature
+```
+
+Imports use the `@/` alias for `src/` (configured in `tsconfig.json` → `paths` and `vite.config.ts` → `resolve.alias`): `import { t } from '@/i18n'`. Use `./` only for files in the same folder; never `../`.
