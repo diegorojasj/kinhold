@@ -25,7 +25,9 @@ pnpm cap:open:android
 pnpm cap:open:ios
 ```
 
-Live reload on a phone: `CAP_SERVER_URL=http://<your-lan-ip>:3000 pnpm cap:sync`, keep `pnpm dev --host` running, then run the app from Android Studio / Xcode.
+Live reload on a phone: set `CAP_SERVER_URL=http://<your-lan-ip>:3000` in the repo-root `.env` (copy `.env.example`), keep `pnpm dev --host` running, then `pnpm cap:sync` and run the app from Android Studio / Xcode.
+
+**Environment variables:** there is one `.env` for the whole repo, at the root. Every variable the code reads must be listed in `.env.example`. Vite reads it too (`envDir`), and only `VITE_*` variables are exposed to browser code.
 
 ## Translations (i18n)
 
