@@ -13,6 +13,11 @@
     "moduleResolution": "bundler",
     "noEmit": true,
 
+    // Path alias: `@/…` = `src/…` (mirrored in vite.config.ts)
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     // Type Checking & Safety
     "strict": true,
     "skipLibCheck": true,

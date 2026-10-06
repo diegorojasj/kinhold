@@ -8,6 +8,10 @@ import { VitePWA } from 'vite-plugin-pwa';
 export default defineConfig({
   // One .env for the whole repo (see .env.example); only VITE_* variables reach the browser bundle.
   envDir: fileURLToPath(new URL('..', import.meta.url)),
+  resolve: {
+    // `@/…` = `src/…` (mirrored in tsconfig.json "paths")
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
+  },
   plugins: [
     devtools(),
     solidPlugin(),
