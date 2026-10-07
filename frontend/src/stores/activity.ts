@@ -1,5 +1,5 @@
 import { persistedStore, uid } from '@/lib/persist';
-import { SEED } from '@/lib/seed';
+import { dropDemoData } from '@/lib/seed';
 import { arrayCollection } from '@/lib/sync';
 import { household, myId } from './household';
 
@@ -29,24 +29,13 @@ export interface Activity {
 
 const KEEP = 50;
 
-const seed = () => {
-  const ago = (min: number) => new Date(Date.now() - min * 60_000).toISOString();
-  const hid = SEED.household;
-  const events: Activity[] = [
-    { id: uid(), householdId: hid, actor: SEED.sam, type: 'item.added', payload: { name: 'Dish soap' }, at: ago(25) },
-    { id: uid(), householdId: hid, actor: SEED.me, type: 'expense.added', payload: { name: 'Weekly groceries', amount: 8640 }, at: ago(90) },
-    { id: uid(), householdId: hid, actor: SEED.noa, type: 'chore.done', payload: { name: 'Vacuum living room' }, at: ago(60 * 20) },
-    { id: uid(), householdId: hid, actor: SEED.sam, type: 'expense.added', payload: { name: 'Pizza night', amount: 4250 }, at: ago(60 * 26) },
-    { id: uid(), householdId: hid, actor: SEED.noa, type: 'expense.added', payload: { name: 'Electricity', amount: 7320 }, at: ago(60 * 72) },
-    { id: uid(), householdId: hid, actor: SEED.sam, type: 'settlement', payload: { amount: 1500, to: SEED.me }, at: ago(60 * 24 * 6) },
-  ];
-  return { events };
-};
+const seed = () => ({ events: [] as Activity[] });
 
 const store = persistedStore('activity', seed);
 
 // The feed keeps the last 50 per household on every device and on the server, so trimming isn't a delete.
 arrayCollection(store, 'household', 'activity', (s) => s.events, { pushDeletes: false, order: (a, b) => b.at.localeCompare(a.at) });
+dropDemoData(store, (s) => [s.events]);
 
 /** Newest first, last 50 for the current household (story F3). */
 export const activity = () => store.state.events.filter((e) => e.householdId === household().id);

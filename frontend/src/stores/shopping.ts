@@ -1,5 +1,5 @@
 import { clone, persistedStore, uid } from '@/lib/persist';
-import { SEED } from '@/lib/seed';
+import { dropDemoData } from '@/lib/seed';
 import { arrayCollection } from '@/lib/sync';
 import { log } from './activity';
 import { household, myId } from './household';
@@ -412,62 +412,14 @@ export function parseQuickAdd(input: string): { name: string; qty: string } {
 
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
-const seed = () => {
-  const now = new Date();
-  const ago = (min: number) => new Date(now.getTime() - min * 60_000).toISOString();
-  const hid = SEED.household;
-  const raw: [string, string, CategoryId, string, boolean, string][] = [
-    ['Avocados', '3', 'produce', '', false, SEED.sam],
-    ['Bananas', '', 'produce', 'Not too ripe', false, SEED.me],
-    ['Sourdough bread', '', 'bakery', '', false, SEED.noa],
-    ['Oat milk', '2', 'dairy', 'Barista edition', false, SEED.me],
-    ['Eggs', '12', 'dairy', '', true, SEED.sam],
-    ['Coffee beans', '', 'pantry', '', false, SEED.noa],
-    ['Pasta', '2', 'pantry', '', true, SEED.me],
-    ['Dish soap', '', 'household', '', false, SEED.sam],
-  ];
-  const items: ShoppingItem[] = raw.map(([name, qty, category, note, checked, by], i) => ({
-    id: uid(),
-    householdId: hid,
-    name,
-    qty,
-    note,
-    category,
-    checked,
-    checkedBy: checked ? SEED.me : undefined,
-    addedBy: by,
-    createdAt: ago(200 - i * 10),
-    updatedAt: ago(200 - i * 10),
-  }));
-  const extra: [string, CategoryId, number][] = [
-    ['Tomatoes', 'produce', 9],
-    ['Greek yogurt', 'dairy', 7],
-    ['Chicken breast', 'meat', 6],
-    ['Toilet paper', 'household', 5],
-    ['Sparkling water', 'drinks', 5],
-    ['Rice', 'pantry', 4],
-    ['Frozen berries', 'frozen', 3],
-    ['Shampoo', 'personal', 2],
-  ];
-  const catalog: CatalogEntry[] = [
-    ...items.map((it, i) => ({ name: it.name, category: it.category, times: 10 - i })),
-    ...extra.map(([name, category, times]) => ({ name, category, times })),
-  ].map((e) => ({
-    id: `${hid}:${normalize(e.name)}`,
-    householdId: hid,
-    name: e.name,
-    category: e.category,
-    timesAdded: e.times,
-    lastAddedAt: ago(60 * 24 * 3),
-  }));
-  return { items, catalog };
-};
+const seed = () => ({ items: [] as ShoppingItem[], catalog: [] as CatalogEntry[] });
 
 const store = persistedStore('shopping', seed);
 const { state, update } = store;
 
 arrayCollection(store, 'shopping', 'items', (s) => s.items);
 arrayCollection(store, 'shopping', 'catalog', (s) => s.catalog);
+dropDemoData(store, (s) => [s.items, s.catalog]);
 
 export const items = () => state.items.filter((i) => i.householdId === household().id);
 

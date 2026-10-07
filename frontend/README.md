@@ -94,7 +94,7 @@ src/lib/sync/
 - **Who you are** is per household (`myId()` in `stores/household.ts`); the device gets a token the first time it's online. Other phones join with an invite code (Household → Phones and devices).
 - **Offline**: the service worker serves the app, the stores serve the data, the outbox holds the changes. The banner shows while the server can't be reached; Config → This device shows the sync state.
 
-Demo data is seeded on first launch (with ids unique to the device) and uploaded like anything else. *Config → Reset this device* wipes the device and its link to its households; they carry on for everyone else.
+A first launch starts with an empty household (ids unique to the device), uploaded like anything else; demo data from earlier versions is removed once (`dropDemoData` in `src/lib/seed.ts`). *Config → Reset this device* wipes the device and its link to its households; they carry on for everyone else.
 
 The stores follow the backend contract: money in integer cents (D-06), repeat rules as RRULE strings (D-07, `src/lib/repeat.ts`), records scoped by `householdId`. Mutations return an undo function, which the UI uses for "Undo" toasts instead of confirmation dialogs.
 

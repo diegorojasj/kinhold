@@ -1,6 +1,6 @@
-import { addDays, today, type IsoDate } from '@/lib/dates';
+import { today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
-import { SEED } from '@/lib/seed';
+import { dropDemoData } from '@/lib/seed';
 import { arrayCollection } from '@/lib/sync';
 import { log } from './activity';
 import { household, myId } from './household';
@@ -81,46 +81,14 @@ export function splitByPercent(total: number, percents: Record<string, number>):
 export const splitsValid = (total: number, splits: Split[]) =>
   total > 0 && splits.length > 0 && splits.reduce((s, x) => s + x.amountCents, 0) === total;
 
-const seed = () => {
-  const t = today();
-  const hid = SEED.household;
-  const people = [SEED.me, SEED.sam, SEED.noa];
-  const now = new Date().toISOString();
-  const mk = (description: string, amountCents: number, paidBy: string, daysAgo: number, category: ExpenseCategory): Expense => ({
-    id: uid(),
-    householdId: hid,
-    description,
-    amountCents,
-    paidBy,
-    date: addDays(t, -daysAgo),
-    category,
-    splitMode: 'equal',
-    splitInput: Object.fromEntries(people.map((p) => [p, 1])),
-    splits: splitEqually(amountCents, people),
-    // Added by "you" on this device: only the person who adds an expense can change it (D5).
-    createdBy: SEED.me,
-    createdAt: now,
-    updatedAt: now,
-  });
-  const expenses = [
-    mk('Weekly groceries', 8640, SEED.me, 0, 'groceries'),
-    mk('Pizza night', 4250, SEED.sam, 1, 'dining'),
-    mk('Electricity', 7320, SEED.noa, 3, 'utilities'),
-    mk('New shower curtain', 1899, SEED.me, 5, 'home'),
-    mk('Cinema tickets', 3600, SEED.sam, 8, 'fun'),
-    mk('Farmers market', 3175, SEED.noa, 11, 'groceries'),
-  ];
-  const settlements: Settlement[] = [
-    { id: uid(), householdId: hid, from: SEED.sam, to: SEED.me, amountCents: 1500, date: addDays(t, -6), createdAt: now },
-  ];
-  return { expenses, settlements };
-};
+const seed = () => ({ expenses: [] as Expense[], settlements: [] as Settlement[] });
 
 const store = persistedStore('money', seed);
 const { state, update } = store;
 
 arrayCollection(store, 'money', 'expenses', (s) => s.expenses);
 arrayCollection(store, 'money', 'settlements', (s) => s.settlements);
+dropDemoData(store, (s) => [s.expenses, s.settlements]);
 
 export const expenses = () =>
   state.expenses

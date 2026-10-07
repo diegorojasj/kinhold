@@ -1,6 +1,6 @@
 import { addDays, diffDays, maxIso, today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
-import { SEED } from '@/lib/seed';
+import { dropDemoData } from '@/lib/seed';
 import { arrayCollection } from '@/lib/sync';
 import { nextAfter, nextOnOrAfter, perMonth } from '@/lib/repeat';
 import { log } from './activity';
@@ -37,43 +37,14 @@ export interface BillPayment {
 
 export const BILL_EMOJI = ['🏠', '💡', '💧', '🔥', '📶', '📱', '🎬', '🎵', '🛡️', '🚗', '🏋️', '☁️', '📰', '🎮', '🧾', '💳'];
 
-const seed = () => {
-  const t = today();
-  const hid = SEED.household;
-  const now = new Date().toISOString();
-  const day = (offset: number) => Number(addDays(t, offset).slice(8, 10));
-  const mk = (name: string, emoji: string, amountCents: number, rrule: string, offset: number, category: ExpenseCategory, remind = 3): Bill => {
-    // First occurrence = the due date we want to show, so the demo looks the same any day.
-    const dtstart = addDays(t, offset);
-    return {
-      id: uid(),
-      householdId: hid,
-      name,
-      emoji,
-      amountCents,
-      rrule,
-      dtstart,
-      nextDue: nextOnOrAfter(rrule, dtstart, dtstart),
-      remindDaysBefore: remind,
-      category,
-      createdAt: now,
-    };
-  };
-  const bills = [
-    mk('Rent', '🏠', 120000, `FREQ=MONTHLY;BYMONTHDAY=${day(9)}`, 9, 'rent', 5),
-    mk('Internet', '📶', 3999, `FREQ=MONTHLY;BYMONTHDAY=${day(2)}`, 2, 'utilities'),
-    mk('Streaming', '🎬', 1399, `FREQ=MONTHLY;BYMONTHDAY=${day(0)}`, 0, 'fun', 1),
-    mk('Water', '💧', 4580, `FREQ=MONTHLY;INTERVAL=2;BYMONTHDAY=${day(-2)}`, -2, 'utilities'),
-    mk('Home insurance', '🛡️', 21500, 'FREQ=YEARLY', 47, 'home', 7),
-  ];
-  return { bills, payments: [] as BillPayment[] };
-};
+const seed = () => ({ bills: [] as Bill[], payments: [] as BillPayment[] });
 
 const store = persistedStore('bills', seed);
 const { state, update } = store;
 
 arrayCollection(store, 'bills', 'bills', (s) => s.bills);
 arrayCollection(store, 'bills', 'payments', (s) => s.payments);
+dropDemoData(store, (s) => [s.bills, s.payments]);
 
 export const bills = () =>
   state.bills.filter((b) => b.householdId === household().id).sort((a, b) => a.nextDue.localeCompare(b.nextDue));

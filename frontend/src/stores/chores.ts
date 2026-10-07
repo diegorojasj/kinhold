@@ -1,6 +1,6 @@
 import { addDays, diffDays, maxIso, startOfWeek, today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
-import { SEED } from '@/lib/seed';
+import { dropDemoData } from '@/lib/seed';
 import { arrayCollection } from '@/lib/sync';
 import { nextAfter, nextOnOrAfter } from '@/lib/repeat';
 import { log } from './activity';
@@ -36,46 +36,14 @@ export interface ChoreEvent {
 
 export const CHORE_EMOJI = ['🧹', '🧽', '🗑️', '🍽️', '🧺', '🛏️', '🪴', '🐶', '🛁', '🧊', '🚗', '📦', '🪟', '🍳', '♻️', '🛒'];
 
-const seed = () => {
-  const t = today();
-  const hid = SEED.household;
-  const now = new Date().toISOString();
-  const make = (
-    title: string,
-    emoji: string,
-    rrule: string,
-    dtstart: IsoDate,
-    nextDue: IsoDate,
-    assigneeMode: AssigneeMode,
-    assignees: string[],
-  ): Chore => ({ id: uid(), householdId: hid, title, emoji, rrule, dtstart, nextDue, assigneeMode, assignees, rotationIndex: 0, createdAt: now });
-
-  const chores = [
-    make('Take out the trash', '🗑️', 'FREQ=WEEKLY;BYDAY=MO,TH', addDays(t, -30), t, 'rotate', [SEED.me, SEED.sam, SEED.noa]),
-    make('Water the plants', '🪴', 'FREQ=DAILY;INTERVAL=3', addDays(t, -1), addDays(t, -1), 'fixed', [SEED.me]),
-    make('Empty the dishwasher', '🍽️', 'FREQ=DAILY', t, t, 'rotate', [SEED.sam, SEED.me]),
-    make('Vacuum living room', '🧹', 'FREQ=WEEKLY;BYDAY=SA', addDays(t, -14), addDays(t, 3), 'fixed', [SEED.noa]),
-    make('Change bed sheets', '🛏️', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=SU', addDays(t, -10), addDays(t, 5), 'fixed', [SEED.me]),
-    make('Clean the fridge', '🧊', 'FREQ=MONTHLY;BYMONTHDAY=1', addDays(t, -40), addDays(t, 12), 'rotate', [SEED.noa, SEED.sam, SEED.me]),
-  ];
-  // Fix seeded due dates to real occurrences of each rule.
-  for (const c of chores) c.nextDue = nextOnOrAfter(c.rrule, c.dtstart, c.nextDue);
-
-  const events: ChoreEvent[] = [];
-  const people = [SEED.me, SEED.sam, SEED.noa, SEED.me, SEED.me, SEED.sam];
-  for (let d = 1; d <= 6; d++) {
-    const day = addDays(t, -d);
-    const who = people[d - 1];
-    events.push({ id: uid(), choreId: chores[d % chores.length].id, householdId: hid, userId: who, action: 'done', dueAt: day, day, at: `${day}T19:00:00.000Z` });
-  }
-  return { chores, events };
-};
+const seed = () => ({ chores: [] as Chore[], events: [] as ChoreEvent[] });
 
 const store = persistedStore('chores', seed);
 const { state, update } = store;
 
 arrayCollection(store, 'chores', 'chores', (s) => s.chores);
 arrayCollection(store, 'chores', 'events', (s) => s.events);
+dropDemoData(store, (s) => [s.chores, s.events]);
 
 export const chores = () => state.chores.filter((c) => c.householdId === household().id);
 export const choreEvents = () => state.events.filter((e) => e.householdId === household().id);
