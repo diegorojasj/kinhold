@@ -1,6 +1,7 @@
 import { addDays, diffDays, maxIso, startOfWeek, today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
 import { SEED } from '@/lib/seed';
+import { arrayCollection } from '@/lib/sync';
 import { nextAfter, nextOnOrAfter } from '@/lib/repeat';
 import { log } from './activity';
 import { household, myId } from './household';
@@ -72,6 +73,9 @@ const seed = () => {
 
 const store = persistedStore('chores', seed);
 const { state, update } = store;
+
+arrayCollection(store, 'chores', 'chores', (s) => s.chores);
+arrayCollection(store, 'chores', 'events', (s) => s.events);
 
 export const chores = () => state.chores.filter((c) => c.householdId === household().id);
 export const choreEvents = () => state.events.filter((e) => e.householdId === household().id);
