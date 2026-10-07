@@ -1,7 +1,8 @@
 import { addDays, today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
+import { SEED } from '@/lib/seed';
 import { log } from './activity';
-import { household, ME } from './household';
+import { household, myId } from './household';
 
 /** Fixed list of 8 categories from day 1 (open question Q7). */
 export const EXPENSE_CATEGORIES = [
@@ -81,8 +82,8 @@ export const splitsValid = (total: number, splits: Split[]) =>
 
 const seed = () => {
   const t = today();
-  const hid = 'hh-home';
-  const people = [ME, 'u-sam', 'u-noa'];
+  const hid = SEED.household;
+  const people = [SEED.me, SEED.sam, SEED.noa];
   const now = new Date().toISOString();
   const mk = (description: string, amountCents: number, paidBy: string, daysAgo: number, category: ExpenseCategory): Expense => ({
     id: uid(),
@@ -95,20 +96,21 @@ const seed = () => {
     splitMode: 'equal',
     splitInput: Object.fromEntries(people.map((p) => [p, 1])),
     splits: splitEqually(amountCents, people),
-    createdBy: paidBy,
+    // Added by "you" on this device: only the person who adds an expense can change it (D5).
+    createdBy: SEED.me,
     createdAt: now,
     updatedAt: now,
   });
   const expenses = [
-    mk('Weekly groceries', 8640, ME, 0, 'groceries'),
-    mk('Pizza night', 4250, 'u-sam', 1, 'dining'),
-    mk('Electricity', 7320, 'u-noa', 3, 'utilities'),
-    mk('New shower curtain', 1899, ME, 5, 'home'),
-    mk('Cinema tickets', 3600, 'u-sam', 8, 'fun'),
-    mk('Farmers market', 3175, 'u-noa', 11, 'groceries'),
+    mk('Weekly groceries', 8640, SEED.me, 0, 'groceries'),
+    mk('Pizza night', 4250, SEED.sam, 1, 'dining'),
+    mk('Electricity', 7320, SEED.noa, 3, 'utilities'),
+    mk('New shower curtain', 1899, SEED.me, 5, 'home'),
+    mk('Cinema tickets', 3600, SEED.sam, 8, 'fun'),
+    mk('Farmers market', 3175, SEED.noa, 11, 'groceries'),
   ];
   const settlements: Settlement[] = [
-    { id: uid(), householdId: hid, from: 'u-sam', to: ME, amountCents: 1500, date: addDays(t, -6), createdAt: now },
+    { id: uid(), householdId: hid, from: SEED.sam, to: SEED.me, amountCents: 1500, date: addDays(t, -6), createdAt: now },
   ];
   return { expenses, settlements };
 };
@@ -177,7 +179,7 @@ export type ExpenseInput = Pick<
 export function addExpense(input: ExpenseInput, opts: { silent?: boolean } = {}): Expense {
   if (!splitsValid(input.amountCents, input.splits)) throw new Error('Splits must add up to the total');
   const now = new Date().toISOString();
-  const e: Expense = { ...clone(input), id: uid(), householdId: household().id, createdBy: ME, createdAt: now, updatedAt: now };
+  const e: Expense = { ...clone(input), id: uid(), householdId: household().id, createdBy: myId(), createdAt: now, updatedAt: now };
   update((s) => {
     s.expenses.push(e);
   });
@@ -186,13 +188,13 @@ export function addExpense(input: ExpenseInput, opts: { silent?: boolean } = {})
 }
 
 /** Only the person who added an expense can change it (D5). */
-export const canEdit = (e: Expense) => e.createdBy === ME;
+export const canEdit = (e: Expense) => e.createdBy === myId();
 
 export function updateExpense(id: string, input: ExpenseInput) {
   if (!splitsValid(input.amountCents, input.splits)) throw new Error('Splits must add up to the total');
   update((s) => {
     const e = s.expenses.find((x) => x.id === id);
-    if (e && e.createdBy === ME) Object.assign(e, clone(input), { updatedAt: new Date().toISOString() });
+    if (e && e.createdBy === myId()) Object.assign(e, clone(input), { updatedAt: new Date().toISOString() });
   });
   log('expense.updated', { name: input.description, amount: input.amountCents });
 }

@@ -1,8 +1,9 @@
 import { addDays, diffDays, maxIso, startOfWeek, today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
+import { SEED } from '@/lib/seed';
 import { nextAfter, nextOnOrAfter } from '@/lib/repeat';
 import { log } from './activity';
-import { household, ME } from './household';
+import { household, myId } from './household';
 
 export type AssigneeMode = 'fixed' | 'rotate';
 
@@ -36,7 +37,7 @@ export const CHORE_EMOJI = ['🧹', '🧽', '🗑️', '🍽️', '🧺', '🛏�
 
 const seed = () => {
   const t = today();
-  const hid = 'hh-home';
+  const hid = SEED.household;
   const now = new Date().toISOString();
   const make = (
     title: string,
@@ -49,18 +50,18 @@ const seed = () => {
   ): Chore => ({ id: uid(), householdId: hid, title, emoji, rrule, dtstart, nextDue, assigneeMode, assignees, rotationIndex: 0, createdAt: now });
 
   const chores = [
-    make('Take out the trash', '🗑️', 'FREQ=WEEKLY;BYDAY=MO,TH', addDays(t, -30), t, 'rotate', [ME, 'u-sam', 'u-noa']),
-    make('Water the plants', '🪴', 'FREQ=DAILY;INTERVAL=3', addDays(t, -1), addDays(t, -1), 'fixed', [ME]),
-    make('Empty the dishwasher', '🍽️', 'FREQ=DAILY', t, t, 'rotate', ['u-sam', ME]),
-    make('Vacuum living room', '🧹', 'FREQ=WEEKLY;BYDAY=SA', addDays(t, -14), addDays(t, 3), 'fixed', ['u-noa']),
-    make('Change bed sheets', '🛏️', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=SU', addDays(t, -10), addDays(t, 5), 'fixed', [ME]),
-    make('Clean the fridge', '🧊', 'FREQ=MONTHLY;BYMONTHDAY=1', addDays(t, -40), addDays(t, 12), 'rotate', ['u-noa', 'u-sam', ME]),
+    make('Take out the trash', '🗑️', 'FREQ=WEEKLY;BYDAY=MO,TH', addDays(t, -30), t, 'rotate', [SEED.me, SEED.sam, SEED.noa]),
+    make('Water the plants', '🪴', 'FREQ=DAILY;INTERVAL=3', addDays(t, -1), addDays(t, -1), 'fixed', [SEED.me]),
+    make('Empty the dishwasher', '🍽️', 'FREQ=DAILY', t, t, 'rotate', [SEED.sam, SEED.me]),
+    make('Vacuum living room', '🧹', 'FREQ=WEEKLY;BYDAY=SA', addDays(t, -14), addDays(t, 3), 'fixed', [SEED.noa]),
+    make('Change bed sheets', '🛏️', 'FREQ=WEEKLY;INTERVAL=2;BYDAY=SU', addDays(t, -10), addDays(t, 5), 'fixed', [SEED.me]),
+    make('Clean the fridge', '🧊', 'FREQ=MONTHLY;BYMONTHDAY=1', addDays(t, -40), addDays(t, 12), 'rotate', [SEED.noa, SEED.sam, SEED.me]),
   ];
   // Fix seeded due dates to real occurrences of each rule.
   for (const c of chores) c.nextDue = nextOnOrAfter(c.rrule, c.dtstart, c.nextDue);
 
   const events: ChoreEvent[] = [];
-  const people = [ME, 'u-sam', 'u-noa', ME, ME, 'u-sam'];
+  const people = [SEED.me, SEED.sam, SEED.noa, SEED.me, SEED.me, SEED.sam];
   for (let d = 1; d <= 6; d++) {
     const day = addDays(t, -d);
     const who = people[d - 1];
@@ -135,7 +136,7 @@ function resolve(id: string, action: 'done' | 'skip'): () => void {
     id: uid(),
     choreId: id,
     householdId: c.householdId,
-    userId: ME,
+    userId: myId(),
     action,
     dueAt: c.nextDue,
     day: today(),

@@ -1,6 +1,7 @@
 import { clone, persistedStore, uid } from '@/lib/persist';
+import { SEED } from '@/lib/seed';
 import { log } from './activity';
-import { household, ME } from './household';
+import { household, myId } from './household';
 
 /** Aisles in the order most shops are walked; frozen comes last among food so it stays cold. */
 export const CATEGORIES = [
@@ -413,16 +414,16 @@ const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const seed = () => {
   const now = new Date();
   const ago = (min: number) => new Date(now.getTime() - min * 60_000).toISOString();
-  const hid = 'hh-home';
+  const hid = SEED.household;
   const raw: [string, string, CategoryId, string, boolean, string][] = [
-    ['Avocados', '3', 'produce', '', false, 'u-sam'],
-    ['Bananas', '', 'produce', 'Not too ripe', false, ME],
-    ['Sourdough bread', '', 'bakery', '', false, 'u-noa'],
-    ['Oat milk', '2', 'dairy', 'Barista edition', false, ME],
-    ['Eggs', '12', 'dairy', '', true, 'u-sam'],
-    ['Coffee beans', '', 'pantry', '', false, 'u-noa'],
-    ['Pasta', '2', 'pantry', '', true, ME],
-    ['Dish soap', '', 'household', '', false, 'u-sam'],
+    ['Avocados', '3', 'produce', '', false, SEED.sam],
+    ['Bananas', '', 'produce', 'Not too ripe', false, SEED.me],
+    ['Sourdough bread', '', 'bakery', '', false, SEED.noa],
+    ['Oat milk', '2', 'dairy', 'Barista edition', false, SEED.me],
+    ['Eggs', '12', 'dairy', '', true, SEED.sam],
+    ['Coffee beans', '', 'pantry', '', false, SEED.noa],
+    ['Pasta', '2', 'pantry', '', true, SEED.me],
+    ['Dish soap', '', 'household', '', false, SEED.sam],
   ];
   const items: ShoppingItem[] = raw.map(([name, qty, category, note, checked, by], i) => ({
     id: uid(),
@@ -432,7 +433,7 @@ const seed = () => {
     note,
     category,
     checked,
-    checkedBy: checked ? ME : undefined,
+    checkedBy: checked ? SEED.me : undefined,
     addedBy: by,
     createdAt: ago(200 - i * 10),
     updatedAt: ago(200 - i * 10),
@@ -520,7 +521,7 @@ export function addItem(input: { name: string; qty?: string; note?: string; cate
     note: input.note?.trim() ?? '',
     category: input.category ?? known?.category ?? guessCategory(name),
     checked: false,
-    addedBy: ME,
+    addedBy: myId(),
     createdAt: now,
     updatedAt: now,
   };
@@ -539,7 +540,7 @@ export function toggleItem(id: string) {
     const it = s.items.find((i) => i.id === id);
     if (!it) return;
     it.checked = !it.checked;
-    it.checkedBy = it.checked ? ME : undefined;
+    it.checkedBy = it.checked ? myId() : undefined;
     it.updatedAt = new Date().toISOString();
   });
 }

@@ -4,7 +4,7 @@ import { AmountInput, Avatar, centsToInput, Choice, Field, MemberPicker, parseAm
 import { t } from '@/i18n';
 import { today } from '@/lib/dates';
 import { haptic } from '@/lib/feedback';
-import { currency, ME, member, members } from '@/stores/household';
+import { currency, myId, member, members } from '@/stores/household';
 import { addExpense, canEdit, type Expense, type ExpenseCategory, expenseCategory, type Split, type SplitMode, splitByPercent, splitEqually, splitsValid, updateExpense } from '@/stores/money';
 import { toast } from '@/stores/toast';
 
@@ -29,7 +29,7 @@ export const ExpenseEditor: Component<{ expense?: Expense; onDone: () => void; o
   const [amount, setAmount] = createSignal(e?.amountCents ?? 0);
   const [description, setDescription] = createSignal(e?.description ?? '');
   const [category, setCategory] = createSignal<ExpenseCategory>(e?.category ?? 'groceries');
-  const [paidBy, setPaidBy] = createSignal(e?.paidBy ?? ME);
+  const [paidBy, setPaidBy] = createSignal(e?.paidBy ?? myId());
   const [date, setDate] = createSignal(e?.date ?? today());
   const [mode, setMode] = createSignal<SplitMode>(e?.splitMode ?? 'equal');
   const [included, setIncluded] = createSignal<string[]>(

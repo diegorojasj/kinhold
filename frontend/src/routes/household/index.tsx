@@ -6,7 +6,7 @@ import { createSheet, Sheet } from '@/components/Sheet';
 import { Avatar, AvatarStack } from '@/components/ui';
 import { t } from '@/i18n';
 import { haptic } from '@/lib/feedback';
-import { household, households, isOwner, leaveHousehold, ME, member, members, switchHousehold } from '@/stores/household';
+import { household, households, isOwner, leaveHousehold, myId, member, members, switchHousehold } from '@/stores/household';
 import { toast } from '@/stores/toast';
 import { HouseholdForm } from './HouseholdForm';
 import { AddMemberForm, MemberForm } from './MemberForms';
@@ -81,13 +81,13 @@ const Household: Component = () => {
                 <button
                   type="button"
                   class="flex w-full items-center gap-3 py-3 text-left disabled:cursor-default"
-                  disabled={m.id === ME || !isOwner()}
+                  disabled={m.id === myId() || !isOwner()}
                   onClick={() => sheet.show({ kind: 'member', id: m.id })}
                 >
                   <Avatar id={m.id} />
                   <span class="min-w-0 flex-1 truncate font-semibold">
                     {m.name}
-                    <Show when={m.id === ME}>
+                    <Show when={m.id === myId()}>
                       <span class="font-normal text-ink-faint"> ({t('common.you')})</span>
                     </Show>
                   </span>

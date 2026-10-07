@@ -4,7 +4,7 @@ import { AmountInput, MemberPicker, Toggle, undoToast } from '@/components/ui';
 import { formatShortDate, t } from '@/i18n';
 import { celebrate } from '@/lib/feedback';
 import { type Bill, markPaid } from '@/stores/bills';
-import { currency, ME, members } from '@/stores/household';
+import { currency, myId, members } from '@/stores/household';
 import { money } from './helpers';
 
 
@@ -14,7 +14,7 @@ import { money } from './helpers';
 export const PayForm: Component<{ bill: Bill; onDone: () => void }> = (props) => {
   let btn!: HTMLButtonElement;
   const [amount, setAmount] = createSignal(props.bill.amountCents);
-  const [paidBy, setPaidBy] = createSignal(ME);
+  const [paidBy, setPaidBy] = createSignal(myId());
   const [asExpense, setAsExpense] = createSignal(true);
   const perPerson = () => Math.round(amount() / Math.max(1, members().length));
 

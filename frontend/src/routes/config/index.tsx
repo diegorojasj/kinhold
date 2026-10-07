@@ -10,7 +10,7 @@ import { t } from '@/i18n';
 import { haptic } from '@/lib/feedback';
 import { clearPersisted } from '@/lib/persist';
 import { platform } from '@/lib/platform';
-import { household, ME, me } from '@/stores/household';
+import { household, myId, me } from '@/stores/household';
 import { prefs, type ThemePref } from '@/stores/prefs';
 import { toast } from '@/stores/toast';
 import { ProfileForm } from './ProfileForm';
@@ -73,7 +73,7 @@ const Config: Component = () => {
 
       {/* You */}
       <button type="button" class="card flex w-full animate-rise items-center gap-4 p-5 text-left" onClick={() => profile.show(true)}>
-        <Avatar id={ME} size="lg" />
+        <Avatar id={myId()} size="lg" />
         <span class="min-w-0 flex-1">
           <span class="block font-display text-xl font-bold">{me()?.name}</span>
           <span class="text-sm text-ink-soft">{t('config.profile')}</span>

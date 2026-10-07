@@ -5,7 +5,7 @@ import { Avatar } from '@/components/ui';
 import { formatDay, t } from '@/i18n';
 import { diffDays, today } from '@/lib/dates';
 import { assigneeOf, type Chore } from '@/stores/chores';
-import { ME } from '@/stores/household';
+import { myId } from '@/stores/household';
 
 import { whoseTurn } from './helpers';
 
@@ -15,7 +15,7 @@ export const ChoreCard: Component<{ chore: Chore; onOpen: () => void; onDone: (e
   let check!: HTMLButtonElement;
   const days = () => diffDays(today(), props.chore.nextDue);
   const who = () => assigneeOf(props.chore);
-  const mine = () => who() === ME;
+  const mine = () => who() === myId();
   const due = () => days() <= 0;
 
   return (

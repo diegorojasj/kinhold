@@ -10,7 +10,7 @@ import { today } from '@/lib/dates';
 import { activity } from '@/stores/activity';
 import { bills, daysLeft, urgency } from '@/stores/bills';
 import { assigneeOf, bucketOf, chores, householdStreak } from '@/stores/chores';
-import { currency, ME, me, member, members } from '@/stores/household';
+import { currency, myId, me, member, members } from '@/stores/household';
 import { netBalances, simplifyDebts } from '@/stores/money';
 import { items } from '@/stores/shopping';
 
@@ -62,9 +62,9 @@ const Home: Component = () => {
   // Snapshot of every section.
   const toGet = () => items().filter((i) => !i.checked).length;
   const dueChores = createMemo(() => chores().filter((c) => bucketOf(c) === 'today'));
-  const myChores = () => dueChores().filter((c) => assigneeOf(c) === ME);
+  const myChores = () => dueChores().filter((c) => assigneeOf(c) === myId());
   const net = createMemo(() => netBalances(members().map((m) => m.id)));
-  const balance = () => net().get(ME) ?? 0;
+  const balance = () => net().get(myId()) ?? 0;
   const nextBill = () => bills()[0];
   const overdueBills = () => bills().filter((b) => urgency(b) === 'overdue');
 
@@ -90,7 +90,7 @@ const Home: Component = () => {
     if (late) return { emoji: late.emoji, text: t('home.nudgeBill', { name: late.name }), href: '/bills' };
     const chore = myChores()[0];
     if (chore) return { emoji: chore.emoji, text: t('home.nudgeChore', { name: chore.title }), href: '/chores' };
-    const debt = simplifyDebts(net()).find((d) => d.from === ME);
+    const debt = simplifyDebts(net()).find((d) => d.from === myId());
     if (debt)
       return {
         emoji: '🤝',

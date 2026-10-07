@@ -7,7 +7,7 @@ import { maxIso, today } from '@/lib/dates';
 import { haptic } from '@/lib/feedback';
 import { alignRule, upcoming } from '@/lib/repeat';
 import { type AssigneeMode, assigneeOf, CHORE_EMOJI, type Chore, type ChoreInput, createChore, updateChore } from '@/stores/chores';
-import { ME, members } from '@/stores/household';
+import { myId, members } from '@/stores/household';
 import { toast } from '@/stores/toast';
 
 /* ── Editor (C1, C2) ────────────────────────────────────────────────── */
@@ -19,7 +19,7 @@ export const ChoreEditor: Component<{ chore?: Chore; onDone: () => void; onDelet
   const [dtstart, setDtstart] = createSignal(props.chore ? maxIso(props.chore.nextDue, props.chore.dtstart) : today());
   const [rrule, setRrule] = createSignal(props.chore?.rrule ?? 'FREQ=WEEKLY');
   const [mode, setMode] = createSignal<AssigneeMode>(props.chore?.assigneeMode ?? 'fixed');
-  const [assignees, setAssignees] = createSignal<string[]>(props.chore?.assignees ?? [ME]);
+  const [assignees, setAssignees] = createSignal<string[]>(props.chore?.assignees ?? [myId()]);
   const [invalid, setInvalid] = createSignal(false);
 
   // Rotation starts with whoever's turn it is now, so the preview matches what will happen.

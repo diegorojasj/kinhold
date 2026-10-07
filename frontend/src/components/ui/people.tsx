@@ -1,6 +1,6 @@
 import { For, Show, type Component } from 'solid-js';
 import { t } from '@/i18n';
-import { initials, member, ME } from '@/stores/household';
+import { initials, member, myId } from '@/stores/household';
 import { Choice, ChoiceGroup } from './choice';
 import { Icon } from '@/components/Icon';
 
@@ -14,7 +14,7 @@ export const Avatar: Component<{ id?: string; size?: 'xs' | 'sm' | 'md' | 'lg'; 
     <span
       class={`inline-flex shrink-0 items-center justify-center rounded-full font-bold text-white select-none ${size()} ${props.ring ? 'ring-2 ring-card' : ''} ${props.class ?? ''}`}
       style={{ background: m()?.color ?? '#958b7e' }}
-      title={props.id === ME ? t('common.you') : m()?.name}
+      title={props.id === myId() ? t('common.you') : m()?.name}
       aria-hidden="true"
     >
       {initials(m()?.name ?? '?')}
@@ -51,7 +51,7 @@ export const MemberPicker: Component<{
             }}
           >
             <Avatar id={id} size="sm" />
-            {id === ME ? t('common.you') : member(id)?.name}
+            {id === myId() ? t('common.you') : member(id)?.name}
             <Show when={props.multiple && on()}>
               <Icon name="check" class="size-4" stroke={2.5} />
             </Show>

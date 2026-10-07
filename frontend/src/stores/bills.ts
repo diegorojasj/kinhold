@@ -1,8 +1,9 @@
 import { addDays, diffDays, maxIso, today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
+import { SEED } from '@/lib/seed';
 import { nextAfter, nextOnOrAfter, perMonth } from '@/lib/repeat';
 import { log } from './activity';
-import { household, ME, members } from './household';
+import { household, myId, members } from './household';
 import { addExpense, removeExpense, splitEqually, type ExpenseCategory } from './money';
 
 export interface Bill {
@@ -37,7 +38,7 @@ export const BILL_EMOJI = ['🏠', '💡', '💧', '🔥', '📶', '📱', '🎬
 
 const seed = () => {
   const t = today();
-  const hid = 'hh-home';
+  const hid = SEED.household;
   const now = new Date().toISOString();
   const day = (offset: number) => Number(addDays(t, offset).slice(8, 10));
   const mk = (name: string, emoji: string, amountCents: number, rrule: string, offset: number, category: ExpenseCategory, remind = 3): Bill => {
@@ -151,7 +152,7 @@ export function removeBill(id: string): () => void {
 export function markPaid(id: string, opts: { createExpense: boolean; paidBy?: string; amountCents?: number }): () => void {
   const b = state.bills.find((x) => x.id === id);
   if (!b) return () => {};
-  const paidBy = opts.paidBy ?? ME;
+  const paidBy = opts.paidBy ?? myId();
   // Variable bills (electricity, water) can be paid with this period's actual amount.
   const amountCents = opts.amountCents && opts.amountCents > 0 ? opts.amountCents : b.amountCents;
   const before = { nextDue: b.nextDue, lastPaidAt: b.lastPaidAt };

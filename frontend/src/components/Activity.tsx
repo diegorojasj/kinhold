@@ -2,7 +2,7 @@ import { A } from '@solidjs/router';
 import { For, type Component } from 'solid-js';
 import { formatMoney, formatRelative, formatTime, t } from '@/i18n';
 import type { Activity } from '@/stores/activity';
-import { household, ME, member } from '@/stores/household';
+import { household, myId, member } from '@/stores/household';
 import { Avatar } from './ui';
 
 export type Section = 'list' | 'chores' | 'money' | 'bills' | 'household';
@@ -42,8 +42,8 @@ function timeLabel(iso: string): string {
 }
 
 export function describeActivity(a: Activity): string {
-  const actor = a.actor === ME ? t('common.you') : (member(a.actor)?.name ?? t('home.someone'));
-  const to = a.payload.to === ME ? t('common.youObject') : (member(a.payload.to)?.name ?? '');
+  const actor = a.actor === myId() ? t('common.you') : (member(a.actor)?.name ?? t('home.someone'));
+  const to = a.payload.to === myId() ? t('common.youObject') : (member(a.payload.to)?.name ?? '');
   return t(`activity.${a.type}`, {
     actor,
     name: a.payload.name ?? '',

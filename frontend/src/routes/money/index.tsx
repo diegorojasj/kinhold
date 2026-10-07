@@ -7,7 +7,7 @@ import { Avatar, EmptyState, Fab, SectionTitle, undoToast } from '@/components/u
 import { formatDay, formatMoneyShort, formatMonth, t } from '@/i18n';
 import { today } from '@/lib/dates';
 import { haptic } from '@/lib/feedback';
-import { currency, ME, members } from '@/stores/household';
+import { currency, myId, members } from '@/stores/household';
 import { canEdit, type Expense, expenseCategory, expenses, monthSpend, netBalances, removeExpense, removeSettlement, type Settlement, settlements, simplifyDebts, type Transfer } from '@/stores/money';
 
 import { ExpenseEditor } from './ExpenseEditor';
@@ -24,7 +24,7 @@ const Money: Component = () => {
   const [showAll, setShowAll] = createSignal(false);
 
   const net = createMemo(() => netBalances(members().map((m) => m.id)));
-  const mine = () => net().get(ME) ?? 0;
+  const mine = () => net().get(myId()) ?? 0;
   const transfers = createMemo(() => simplifyDebts(net()));
   const spend = createMemo(() => monthSpend());
 
@@ -100,7 +100,7 @@ const Money: Component = () => {
             <ul class="mt-5 flex flex-col gap-2">
               <For each={transfers()}>
                 {(tr) => {
-                  const involvesMe = () => tr.from === ME || tr.to === ME;
+                  const involvesMe = () => tr.from === myId() || tr.to === myId();
                   return (
                     <li class={`flex items-center gap-3 rounded-2xl px-3 py-2.5 ${involvesMe() ? 'bg-white/12' : 'bg-white/5'}`}>
                       <span class="flex items-center -space-x-1.5">

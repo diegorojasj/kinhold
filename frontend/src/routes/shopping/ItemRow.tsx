@@ -3,7 +3,7 @@ import { Icon } from '@/components/Icon';
 import { SwipeRow } from '@/components/SwipeRow';
 import { Avatar, Choice } from '@/components/ui';
 import { t } from '@/i18n';
-import { ME, member } from '@/stores/household';
+import { myId, member } from '@/stores/household';
 import { itemEmoji, type ShoppingItem } from '@/stores/shopping';
 
 /* ── One row ────────────────────────────────────────────────────────── */
@@ -68,7 +68,7 @@ export const ItemRow: Component<{
               <span class="block truncate text-sm text-ink-soft">{props.item.note}</span>
             </Show>
           </span>
-          <Show when={props.item.addedBy !== ME}>
+          <Show when={props.item.addedBy !== myId()}>
             <Avatar id={props.item.addedBy} size="xs" />
             <span class="sr-only">{t('shopping.addedBy', { name: member(props.item.addedBy)?.name ?? '' })}</span>
           </Show>
