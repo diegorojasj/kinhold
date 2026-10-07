@@ -9,9 +9,10 @@ import { haptic } from '@/lib/feedback';
 import { household, households, isOwner, leaveHousehold, myId, member, members, switchHousehold } from '@/stores/household';
 import { toast } from '@/stores/toast';
 import { HouseholdForm } from './HouseholdForm';
+import { InviteSheet, JoinForm } from './InviteForms';
 import { AddMemberForm, MemberForm } from './MemberForms';
 
-type SheetKind = { kind: 'edit' | 'create' | 'addMember' } | { kind: 'member'; id: string };
+type SheetKind = { kind: 'edit' | 'create' | 'addMember' | 'invite' | 'join' } | { kind: 'member'; id: string };
 
 /** Everything shared by the people in a household (A2–A4): details, members, switching, leaving. */
 const Household: Component = () => {
@@ -27,6 +28,10 @@ const Household: Component = () => {
         return t('household.newHousehold');
       case 'addMember':
         return t('household.addMember');
+      case 'invite':
+        return t('household.invite');
+      case 'join':
+        return t('household.join');
       case 'member':
         return member(v.id)?.name ?? '';
       default:
@@ -105,6 +110,14 @@ const Household: Component = () => {
         </button>
       </Card>
 
+      {/* Other phones (A3): invite someone here, or join someone else's household. */}
+      <Card title={t('household.devices')}>
+        <Row icon="link" label={t('household.invite')} hint={t('household.inviteHint')} onClick={() => sheet.show({ kind: 'invite' })} />
+        <div class="border-t border-line">
+          <Row icon="users" label={t('household.join')} hint={t('household.joinHint')} onClick={() => sheet.show({ kind: 'join' })} />
+        </div>
+      </Card>
+
       {/* Switch / create (A4) */}
       <Card title={t('household.yours')} action={{ label: t('household.newHousehold'), run: () => sheet.show({ kind: 'create' }) }}>
         <Row label={`${household().emoji}  ${household().name}`} hint={t('household.current')}>
@@ -138,6 +151,10 @@ const Household: Component = () => {
                 return <HouseholdForm create onDone={sheet.close} />;
               case 'addMember':
                 return <AddMemberForm onDone={sheet.close} />;
+              case 'invite':
+                return <InviteSheet />;
+              case 'join':
+                return <JoinForm onDone={sheet.close} />;
               case 'member': {
                 const m = member(v.id);
                 return m ? <MemberForm member={m} onDone={sheet.close} /> : null;
