@@ -178,6 +178,10 @@ export const dict: RawDictionary = {
     doneForNow: 'Hecha por ahora 🎉',
     skippedForNow: 'Saltada esta vez',
     nextOnDate: 'Próxima: {{ date }}',
+    tapHint: 'Toca Hecho en cuanto termines una',
+    letsGo: (n: number) => plural('es', n, { one: '1 tarea hoy. ¡Victoria rápida!', other: `${n} tareas hoy. Una a una 💪` }),
+    toGo: (n: number) => plural('es', n, { one: '¡Solo queda 1!', other: `Quedan ${n}, ¡sigue así!` }),
+    allDoneToday: 'Todo hecho por hoy 🎉',
   },
   money: {
     title: 'Dinero',

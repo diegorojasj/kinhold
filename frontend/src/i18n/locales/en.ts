@@ -177,6 +177,10 @@ export const dict = {
     doneForNow: 'Done for now 🎉',
     skippedForNow: 'Skipped this time',
     nextOnDate: 'Next: {{ date }}',
+    tapHint: 'Tap Done as soon as you finish one',
+    letsGo: (n: number) => plural('en', n, { one: '1 chore today. Quick win!', other: `${n} chores today. One at a time 💪` }),
+    toGo: (n: number) => plural('en', n, { one: 'Just 1 to go!', other: `${n} to go, keep it up!` }),
+    allDoneToday: 'All done for today 🎉',
   },
   money: {
     title: 'Money',

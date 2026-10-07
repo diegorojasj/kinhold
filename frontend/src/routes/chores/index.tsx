@@ -136,6 +136,11 @@ const Chores: Component = () => {
               </For>
             </ul>
           </div>
+          <Show when={doneToday().length || dueToday()}>
+            <p class={`col-span-2 -mt-1 text-sm font-semibold ${dueToday() ? 'text-ink-soft' : 'text-basil'}`}>
+              {dueToday() ? (doneToday().length ? t('chores.toGo', dueToday()) : t('chores.letsGo', dueToday())) : t('chores.allDoneToday')}
+            </p>
+          </Show>
         </div>
 
         <For each={SECTIONS}>
@@ -143,6 +148,12 @@ const Chores: Component = () => {
             <Show when={byBucket(section.id).length}>
               <section>
                 <SectionTitle count={byBucket(section.id).length}>{section.label()}</SectionTitle>
+                <Show when={section.id === 'today'}>
+                  <p class="-mt-1 mb-2.5 flex items-center gap-1.5 px-1 text-sm text-ink-faint">
+                    <Icon name="check" class="size-4 text-basil" stroke={2.75} />
+                    {t('chores.tapHint')}
+                  </p>
+                </Show>
                 <ul class="flex flex-col gap-2.5">
                   <For each={byBucket(section.id)}>
                     {(c) => (
