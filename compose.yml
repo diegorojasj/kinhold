@@ -1,9 +1,32 @@
-x-mongodb-env: &mongodb-env
-  DB_HOST: ${DB_HOST:-database}
-  DB_PORT: ${DB_PORT:-27017}
-  DB_USER: ${DB_USER}
-  DB_PASSWORD: ${DB_PASSWORD}
-  DB_NAME: ${DB_NAME}
+# Backend services, database, Valkey and the API gateway always run; pick the frontend with a profile:
+#   podman-compose --profile DEV up --build    (Vite dev server on :3000, API through the gateway)
+#   podman-compose --profile PROD up --build   (static build behind nginx on :80)
+
+x-service: &service
+  environment:
+    DB_HOST: database
+    DB_PORT: "5432"
+    DB_USER: ${DB_USER}
+    DB_PASSWORD: ${DB_PASSWORD}
+    DB_NAME: ${DB_NAME}
+    VALKEY_URL: valkey://valkey:6379/0
+    GATEWAY_SECRET: ${GATEWAY_SECRET}
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY}
+  depends_on:
+    database:
+      condition: service_healthy
+    valkey:
+      condition: service_healthy
+  healthcheck:
+    test: ["CMD", "python", "-c", "import os, urllib.request as u; u.urlopen(f'http://127.0.0.1:8000/api/{os.environ[\"SERVICE\"]}/health', timeout=3)"]
+    interval: 10s
+    timeout: 5s
+    retries: 10
+  restart: unless-stopped
+
+x-service-build: &service-build
+  context: ./services
+  dockerfile: ../containers/containerfiles/service.containerfile
 
 services:
   frontend-dev:
@@ -12,7 +35,10 @@ services:
       context: ./frontend
       dockerfile: ../containers/containerfiles/frontend.dev.containerfile
     environment:
-      API_GATEWAY_URL: http://api-gateway-dev:8000
+      # Vite proxies /api here (see frontend/vite.config.ts).
+      API_GATEWAY_URL: http://api-gateway:8000
+    ports:
+      - "3000:3000"
     volumes:
       - ./frontend:/app:z
       - node_modules:/app/node_modules
@@ -28,26 +54,92 @@ services:
     image: nginx:alpine
     volumes:
       - web-cache:/usr/share/nginx/html:ro
+      - ./containers/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro,z
     ports:
       - "80:80"
     depends_on:
       frontend-prod:
         condition: service_completed_successfully
- 
-  database:
-    image: docker.io/library/mongo:8
+      api-gateway:
+        condition: service_started
+
+  api-gateway:
+    image: docker.io/library/caddy:2-alpine
     environment:
-      MONGO_INITDB_ROOT_USERNAME: ${DB_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${DB_PASSWORD}
-      MONGO_INITDB_DATABASE: ${DB_NAME}
-    ports:
-      - "27017:27017"
+      GATEWAY_SECRET: ${GATEWAY_SECRET}
     volumes:
-      - mongodb-data:/data/db
+      - ./containers/gateway/Caddyfile:/etc/caddy/Caddyfile:ro,z
+    # Published so `pnpm dev` outside a container, and phones on the LAN, can reach the API.
+    ports:
+      - "8000:8000"
+    depends_on:
+      - household-service
+      - shopping-service
+      - chores-service
+      - money-service
+      - bills-service
+    restart: unless-stopped
+
+  household-service:
+    <<: *service
+    image: localhost/kinhold-household-service
+    build:
+      <<: *service-build
+      args: { SERVICE: household }
+  shopping-service:
+    <<: *service
+    image: localhost/kinhold-shopping-service
+    build:
+      <<: *service-build
+      args: { SERVICE: shopping }
+  chores-service:
+    <<: *service
+    image: localhost/kinhold-chores-service
+    build:
+      <<: *service-build
+      args: { SERVICE: chores }
+  money-service:
+    <<: *service
+    image: localhost/kinhold-money-service
+    build:
+      <<: *service-build
+      args: { SERVICE: money }
+  bills-service:
+    <<: *service
+    image: localhost/kinhold-bills-service
+    build:
+      <<: *service-build
+      args: { SERVICE: bills }
+
+  database:
+    image: docker.io/supabase/postgres:17.11.0.004
+    environment:
+      # The image's superuser is supabase_admin; the services use their own role, created by
+      # containers/postgres/zz-kinhold-app.sh on the first start of the volume.
+      POSTGRES_PASSWORD: ${DB_SUPERUSER_PASSWORD}
+      APP_DB_USER: ${DB_USER}
+      APP_DB_PASSWORD: ${DB_PASSWORD}
+      APP_DB_NAME: ${DB_NAME}
+    ports:
+      - "54322:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./containers/postgres/zz-kinhold-app.sh:/docker-entrypoint-initdb.d/zz-kinhold-app.sh:ro,z
     healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.runCommand({ ping: 1 }).ok"]
+      # Over TCP: during first-start initialisation Postgres only listens on its socket.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d postgres"]
       interval: 5s
       timeout: 5s
+      retries: 30
+
+  # Live-update fan-out (pub/sub) only: nothing to persist, Postgres is the source of truth.
+  valkey:
+    image: docker.io/valkey/valkey:8-alpine
+    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 5s
+      timeout: 3s
       retries: 20
 
 volumes:
@@ -56,4 +148,6 @@ volumes:
   pnpm_store:
     driver: local
   web-cache:
+    driver: local
+  postgres-data:
     driver: local
