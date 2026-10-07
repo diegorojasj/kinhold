@@ -54,3 +54,6 @@ gitignore
 # System Files
 .DS_Store
 Thumbs.db
+# Python test coverage
+htmlcov/
+.coverage
