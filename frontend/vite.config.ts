@@ -41,7 +41,10 @@ export default defineConfig(({ mode }) => {
           theme_color: '#1d1a16',
         },
         workbox: {
-          globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
+          // No `webmanifest`: the plugin precaches the manifest itself, and a second entry with another
+          // revision makes Workbox throw, leaving a service worker that caches nothing (no offline start).
+          // woff2: the self-hosted fonts, so the app looks right offline too.
+          globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
           navigateFallback: '/index.html',
           navigateFallbackDenylist: [/^\/api\//],
         },
