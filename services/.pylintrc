@@ -1,0 +1,122 @@
+[MASTER]
+# Use multiple processes to speed up Pylint
+jobs=0
+
+# Pickle collected data for later comparisons
+persistent=yes
+
+[MESSAGES CONTROL]
+# Disable the message, report, category or checker with the given id(s).
+disable=
+    import-error,
+    too-few-public-methods,
+    duplicate-code,
+    fixme,
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-many-ancestors,
+    too-many-instance-attributes,
+    too-many-arguments,
+    too-many-locals,
+    too-many-branches,
+    too-many-statements,
+    too-many-return-statements,
+    unnecessary-pass,
+    invalid-name,
+    logging-fstring-interpolation,
+    broad-exception-caught,
+    unused-argument,
+    redefined-builtin,
+    unused-import,
+    import-outside-toplevel,
+    protected-access,
+    raise-missing-from,
+    consider-using-f-string,
+    unnecessary-direct-lambda-call,
+    consider-using-generator,
+    no-else-return
+
+[FORMAT]
+# Maximum number of characters on a single line.
+max-line-length=100
+
+# Maximum number of lines in a module
+max-module-lines=1000
+
+[BASIC]
+# Good variable names which should always be accepted
+good-names=i,j,k,ex,Run,_,id,pk,v,e,db,f,x,y,z
+
+# Regular expression matching correct function names
+function-rgx=[a-z_][a-z0-9_]{2,50}$
+
+# Regular expression matching correct method names
+method-rgx=[a-z_][a-z0-9_]{2,50}$
+
+# Regular expression matching correct constant names
+const-rgx=(([A-Z_][A-Z0-9_]*)|(__.*__))$
+
+# Regular expression matching correct attribute names
+attr-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct argument names
+argument-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct variable names
+variable-rgx=[a-z_][a-z0-9_]{2,30}$
+
+# Regular expression matching correct class attribute names
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,30}|(__.*__))$
+
+[DESIGN]
+# Maximum number of arguments for function / method
+max-args=5
+
+# Maximum number of attributes for a class
+max-attributes=15
+
+# Maximum number of boolean expressions in a if statement
+max-bool-expr=5
+
+# Maximum number of branch for function / method body
+max-branches=12
+
+# Maximum number of locals for function / method body
+max-locals=15
+
+# Maximum number of parents for a class
+max-parents=7
+
+# Maximum number of public methods for a class
+max-public-methods=20
+
+# Maximum number of return / yield for function / method body
+max-returns=6
+
+# Maximum number of statements in function / method body
+max-statements=50
+
+[SIMILARITIES]
+# Minimum lines number of a similarity.
+min-similarity-lines=10
+
+# Ignore imports when computing similarities.
+ignore-imports=yes
+
+[TYPECHECK]
+# List of class names for which member attributes should not be checked
+ignored-classes=SQLObject,optparse.Values,thread._local,_thread._local,pymongo,beanie
+
+# List of module names for which member attributes should not be checked
+ignored-modules=
+
+[REPORTS]
+# Set the output format
+output-format=text
+
+# Tells whether to display a full report or only the messages
+reports=no
+
+# Activate the evaluation score
+score=yes
