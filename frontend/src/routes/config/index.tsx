@@ -10,6 +10,7 @@ import { t } from '@/i18n';
 import { haptic } from '@/lib/feedback';
 import { clearPersisted } from '@/lib/persist';
 import { platform } from '@/lib/platform';
+import { isLive, pendingCount, syncStatus } from '@/lib/sync';
 import { household, myId, me } from '@/stores/household';
 import { prefs, type ThemePref } from '@/stores/prefs';
 import { toast } from '@/stores/toast';
@@ -54,6 +55,20 @@ const Config: Component = () => {
       p.notifications = true;
     });
     toast({ emoji: '🔔', message: t('config.notificationsOn') });
+  };
+
+  const syncHint = () => {
+    const n = pendingCount();
+    switch (syncStatus()) {
+      case 'offline':
+        return n ? `${t('sync.offline')} · ${t('sync.pending', n)}` : t('sync.offline');
+      case 'error':
+        return t('sync.error');
+      case 'syncing':
+        return t('sync.syncing');
+      default:
+        return n ? t('sync.pending', n) : isLive() ? t('sync.live') : t('sync.upToDate');
+    }
   };
 
   const reset = () => {
@@ -125,6 +140,11 @@ const Config: Component = () => {
 
       {/* This device */}
       <Card title={t('config.thisDevice')}>
+        <Row icon="device" label={t('sync.title')} hint={syncHint()}>
+          <span
+            class={`size-2.5 rounded-full ${syncStatus() === 'idle' && !pendingCount() ? 'bg-basil' : syncStatus() === 'error' ? 'bg-coral' : 'bg-saffron'}`}
+          />
+        </Row>
         <Row
           icon="trash"
           label={confirmReset() ? t('common.tapToConfirm') : t('config.reset')}

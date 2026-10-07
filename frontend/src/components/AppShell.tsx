@@ -1,5 +1,6 @@
 import { t } from '@/i18n';
 import { haptic } from '@/lib/feedback';
+import { syncStatus } from '@/lib/sync';
 import { bills, urgency } from '@/stores/bills';
 import { bucketOf, chores } from '@/stores/chores';
 import '@/stores/prefs';
@@ -129,7 +130,8 @@ export const AppShell: ParentComponent = (props) => {
       </nav>
 
       <div class="flex min-w-0 flex-1 flex-col pt-safe">
-        <Show when={!online()}>
+        {/* No network, or the server can't be reached: the app keeps working and syncs later. */}
+        <Show when={!online() || syncStatus() === 'offline'}>
           <div role="status" class="flex items-center justify-center gap-2 bg-saffron/15 px-4 py-2 text-center text-sm font-medium text-ink">
             <Icon name="wifiOff" class="size-4" />
             {t('app.offline')}
