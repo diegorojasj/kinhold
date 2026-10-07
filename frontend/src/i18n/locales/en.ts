@@ -170,6 +170,8 @@ export const dict = {
     history: 'History',
     historyDone: '{{ name }} did it',
     historySkipped: '{{ name }} skipped it',
+    doneBadge: 'Done',
+    skippedBadge: 'Skipped',
     doneEarly: 'Done early',
     doneEarlyHint: 'The next one moves to {{ date }}',
     doneForNow: 'Done for now 🎉',
