@@ -95,6 +95,15 @@ export function removeChore(id: string): () => void {
     });
 }
 
+/** What happened to the chore today, if anything (the latest done or skip). */
+export const resolvedToday = (c: Chore) => choreEvents().find((e) => e.choreId === c.id && e.day === today());
+
+/**
+ * A due chore can always be done or skipped. One that isn't due yet can be finished early once:
+ * after that it waits for its next date, so it can't be ticked again and again into the future.
+ */
+export const canResolve = (c: Chore) => c.nextDue <= today() || !resolvedToday(c);
+
 /**
  * Done or skip (C3): records history and moves the chore to its next occurrence after
  * whichever is later, the due date or today (an overdue chore doesn't pile up repeats).
@@ -102,7 +111,7 @@ export function removeChore(id: string): () => void {
  */
 function resolve(id: string, action: 'done' | 'skip'): () => void {
   const c = state.chores.find((x) => x.id === id);
-  if (!c) return () => {};
+  if (!c || !canResolve(c)) return () => {};
   const before = { nextDue: c.nextDue, rotationIndex: c.rotationIndex };
   const event: ChoreEvent = {
     id: uid(),

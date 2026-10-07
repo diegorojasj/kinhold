@@ -171,6 +171,11 @@ export const dict: RawDictionary = {
     history: 'Historial',
     historyDone: '{{ name }} la hizo',
     historySkipped: '{{ name }} la saltó',
+    doneEarly: 'Hecha antes',
+    doneEarlyHint: 'La siguiente pasa al {{ date }}',
+    doneForNow: 'Hecha por ahora 🎉',
+    skippedForNow: 'Saltada esta vez',
+    nextOnDate: 'Próxima: {{ date }}',
   },
   money: {
     title: 'Dinero',

@@ -4,7 +4,7 @@ import { SwipeRow } from '@/components/SwipeRow';
 import { Avatar } from '@/components/ui';
 import { formatDay, t } from '@/i18n';
 import { diffDays, today } from '@/lib/dates';
-import { assigneeOf, type Chore } from '@/stores/chores';
+import { assigneeOf, canResolve, type Chore } from '@/stores/chores';
 import { myId } from '@/stores/household';
 
 import { whoseTurn } from './helpers';
@@ -23,7 +23,7 @@ export const ChoreCard: Component<{ chore: Chore; onOpen: () => void; onDone: (e
       class="rounded-3xl"
       // Only chores that are due can be ticked from the list; finishing early goes through the detail sheet.
       start={due() ? { icon: 'check', label: t('chores.done'), color: 'var(--color-basil)', run: () => props.onDone(check) } : undefined}
-      end={{ icon: 'skip', label: t('chores.skip'), color: 'var(--color-ink-faint)', run: props.onSkip }}
+      end={canResolve(props.chore) ? { icon: 'skip', label: t('chores.skip'), color: 'var(--color-ink-faint)', run: props.onSkip } : undefined}
     >
       <div class={`card flex items-center gap-3 p-3 pr-3.5 ${mine() && days() <= 0 ? 'ring-2 ring-(--accent)/40' : ''}`}>
         <button type="button" class="flex min-w-0 flex-1 items-center gap-3 text-left" onClick={props.onOpen}>

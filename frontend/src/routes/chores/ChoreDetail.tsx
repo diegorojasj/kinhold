@@ -5,7 +5,7 @@ import { formatDay, formatShortDate, t } from '@/i18n';
 import { addDays, diffDays, today } from '@/lib/dates';
 import { describeRule } from '@/lib/describe';
 import { upcoming } from '@/lib/repeat';
-import { assigneeOf, type Chore, choreEvents } from '@/stores/chores';
+import { assigneeOf, canResolve, type Chore, choreEvents, resolvedToday } from '@/stores/chores';
 import { member } from '@/stores/household';
 
 import { whoseTurn } from './helpers';
@@ -17,6 +17,7 @@ export const ChoreDetail: Component<{ chore: Chore; onDone: (el: HTMLElement) =>
   const history = () => choreEvents().filter((e) => e.choreId === props.chore.id).slice(0, 6);
   const next = createMemo(() => upcoming(props.chore.rrule, props.chore.dtstart, addDays(props.chore.nextDue, 1), 3));
   const days = () => diffDays(today(), props.chore.nextDue);
+  const handled = () => resolvedToday(props.chore);
 
   return (
     <div class="flex flex-col gap-5">
@@ -44,16 +45,36 @@ export const ChoreDetail: Component<{ chore: Chore; onDone: (el: HTMLElement) =>
         </div>
       </div>
 
-      <div class="flex gap-3">
-        <button ref={doneBtn} type="button" class="btn-accent flex-1 py-4 text-lg" onClick={() => props.onDone(doneBtn)}>
-          <Icon name="check" class="size-6" stroke={2.5} />
-          {t('chores.markDoneShort')}
-        </button>
-        <button type="button" class="btn-ghost" onClick={props.onSkip}>
-          <Icon name="skip" class="size-5" />
-          {t('chores.skip')}
-        </button>
-      </div>
+      <Show
+        when={canResolve(props.chore)}
+        fallback={
+          <div class="flex items-center gap-3 rounded-2xl bg-basil/12 p-4">
+            <span class="flex size-10 shrink-0 items-center justify-center rounded-full bg-basil text-on-accent">
+              <Icon name={handled()?.action === 'skip' ? 'skip' : 'check'} class="size-5" stroke={3} />
+            </span>
+            <div class="min-w-0">
+              <p class="font-semibold">{handled()?.action === 'skip' ? t('chores.skippedForNow') : t('chores.doneForNow')}</p>
+              <p class="text-sm text-ink-soft">{t('chores.nextOnDate', { date: formatDay(props.chore.nextDue, today()) })}</p>
+            </div>
+          </div>
+        }
+      >
+        <div class="flex flex-col gap-2">
+          <div class="flex gap-3">
+            <button ref={doneBtn} type="button" class="btn-accent flex-1 py-4 text-lg" onClick={() => props.onDone(doneBtn)}>
+              <Icon name="check" class="size-6" stroke={2.5} />
+              {days() > 0 ? t('chores.doneEarly') : t('chores.markDoneShort')}
+            </button>
+            <button type="button" class="btn-ghost" onClick={props.onSkip}>
+              <Icon name="skip" class="size-5" />
+              {t('chores.skip')}
+            </button>
+          </div>
+          <Show when={days() > 0}>
+            <p class="text-center text-sm text-ink-faint">{t('chores.doneEarlyHint', { date: formatShortDate(next()[0]) })}</p>
+          </Show>
+        </div>
+      </Show>
 
       <div>
         <p class="label">{t('chores.thenOn')}</p>
