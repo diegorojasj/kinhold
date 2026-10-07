@@ -1,0 +1,73 @@
+# API gateway: the only way into the services. Routes /api/<service>/* to <service>-service, after asking
+# household-service who the caller is (device token) and whether it belongs to the household in the path.
+{
+	admin off
+	auto_https off
+}
+
+# Services only trust identity headers that arrive together with this shared secret.
+(upstream) {
+	reverse_proxy {args[0]}-service:8000 {
+		header_up X-Kinhold-Gateway {$GATEWAY_SECRET}
+		# Pass server-sent events (/api/household/events) through as they are written.
+		flush_interval -1
+	}
+}
+
+(device_auth) {
+	forward_auth household-service:8000 {
+		uri /api/household/auth/verify
+		header_up X-Kinhold-Gateway {$GATEWAY_SECRET}
+		copy_headers X-Kinhold-Device X-Kinhold-Household X-Kinhold-Member
+	}
+}
+
+# args: service name, then extra paths under /api/<service>/ that need no device token.
+(service) {
+	@{args[0]}_open path /api/{args[0]}/health /api/{args[0]}/docs /api/{args[0]}/openapi.json {args[1:]}
+	handle @{args[0]}_open {
+		import upstream {args[0]}
+	}
+	handle /api/{args[0]}/* {
+		import device_auth
+		import upstream {args[0]}
+	}
+}
+
+:8000 {
+	route {
+		# Identity headers only ever come from forward_auth, never from the client.
+		request_header -X-Kinhold-Gateway
+		request_header -X-Kinhold-Device
+		request_header -X-Kinhold-Household
+		request_header -X-Kinhold-Member
+
+		# CORS for the native apps: Capacitor serves the bundle from capacitor://localhost (iOS) and
+		# https://localhost (Android). The web build is same-origin and needs none.
+		@native header_regexp Origin ^(capacitor://localhost|https?://localhost(:[0-9]+)?)$
+		header @native {
+			Access-Control-Allow-Origin {http.request.header.Origin}
+			Access-Control-Allow-Headers "Authorization, Content-Type, Last-Event-ID"
+			Access-Control-Allow-Methods "GET, POST, DELETE, OPTIONS"
+			Access-Control-Max-Age 86400
+			Vary Origin
+		}
+		@preflight {
+			method OPTIONS
+			header_regexp Origin ^(capacitor://localhost|https?://localhost(:[0-9]+)?)$
+		}
+		respond @preflight 204
+
+		handle /api/household/auth/* {
+			respond 404
+		}
+		import service household /api/household/devices
+		import service shopping
+		import service chores
+		import service money
+		import service bills
+		handle {
+			respond `{"code":"not_found","message":"Not found.","details":null}` 404
+		}
+	}
+}
