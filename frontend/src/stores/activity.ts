@@ -1,5 +1,6 @@
 import { persistedStore, uid } from '@/lib/persist';
 import { SEED } from '@/lib/seed';
+import { arrayCollection } from '@/lib/sync';
 import { household, myId } from './household';
 
 export type ActivityType =
@@ -43,6 +44,9 @@ const seed = () => {
 };
 
 const store = persistedStore('activity', seed);
+
+// The feed keeps the last 50 per household on every device and on the server, so trimming isn't a delete.
+arrayCollection(store, 'household', 'activity', (s) => s.events, { pushDeletes: false, order: (a, b) => b.at.localeCompare(a.at) });
 
 /** Newest first, last 50 for the current household (story F3). */
 export const activity = () => store.state.events.filter((e) => e.householdId === household().id);
