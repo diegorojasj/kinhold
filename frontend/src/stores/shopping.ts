@@ -1,5 +1,6 @@
 import { clone, persistedStore, uid } from '@/lib/persist';
 import { SEED } from '@/lib/seed';
+import { arrayCollection } from '@/lib/sync';
 import { log } from './activity';
 import { household, myId } from './household';
 
@@ -464,6 +465,9 @@ const seed = () => {
 
 const store = persistedStore('shopping', seed);
 const { state, update } = store;
+
+arrayCollection(store, 'shopping', 'items', (s) => s.items);
+arrayCollection(store, 'shopping', 'catalog', (s) => s.catalog);
 
 export const items = () => state.items.filter((i) => i.householdId === household().id);
 
