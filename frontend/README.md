@@ -69,13 +69,34 @@ Safe-area utilities (`pt-safe`, `pb-safe`, `px-safe`, `pb-tabbar`) in `src/index
 
 ## Native app + backend
 
-The web build uses same-domain session cookies (decision D-01). Inside the native app the page is served from `capacitor://localhost` / `https://localhost`, so API calls must go to the full server URL and the backend needs CORS + `SameSite=None; Secure` cookies (or token auth) for those origins. Sort this out before shipping the native build.
+The web build calls the API on its own origin (`/api`, D-01); `pnpm dev` and `pnpm serve` proxy `/api` to the gateway (`API_GATEWAY_URL`, default `http://localhost:8000`). The native app is served from `capacitor://localhost` / `https://localhost`, so release builds need `VITE_API_URL=https://your.domain`; the gateway already answers CORS for those origins. Auth is a device token in the `Authorization` header (no cookies), so it works the same on web and native.
 
-## Data (until the API exists)
+## Data and sync (offline-first)
 
-Every screen has full create / edit / delete, but data lives **on the device**: `src/stores/*.ts` are Solid stores persisted to `localStorage` (`src/lib/persist.ts`) and seeded with demo data. Two tabs on the same device stay in sync through the `storage` event, which stands in for the SSE live updates. *Config → Reset demo data* wipes it.
+Every store in `src/stores/*.ts` is **this device's copy** of the household, saved to `localStorage` (`src/lib/persist.ts`). Screens read and write the stores directly, so the app works the same offline; `src/lib/sync/` keeps them in step with the backend:
 
-The stores already follow the backend contract, so swapping them for API calls is mechanical: client-generated ids (D-08), money in integer cents (D-06), repeat rules as RRULE strings (D-07, `src/lib/repeat.ts`), and records scoped by `householdId`. Mutations return an undo function, which the UI uses for "Undo" toasts instead of confirmation dialogs.
+```
+src/lib/sync/
+├── collections.ts  # registry: which store arrays sync with which service (`arrayCollection(...)`)
+├── tracker.ts      # after every local change, diffs the store into ops (changed fields only)
+├── outbox.ts       # ops waiting for the server, kept in localStorage (survive reloads, shared by tabs)
+├── engine.ts       # the loop: register device → push outbox → pull changes since each cursor
+├── live.ts         # server-sent events: "service X changed" → pull from X (≈300 ms phone to phone)
+├── households.ts   # invite / join / leave (the only things that need a connection)
+├── state.ts        # cursors, linked households, server clock offset
+└── api.ts, device.ts
+```
+
+- **Nothing in a store knows about the server.** A store only declares what syncs, e.g. `arrayCollection(store, 'shopping', 'items', (s) => s.items)`. Undo, edits and deletes are picked up by the diff.
+- **Ops** set some fields of one record at a timestamp; the server keeps the newest value per field (last-write-wins per field, D-09). Ids are made on the device (D-08), so retrying is always safe.
+- **Pulls** fetch everything with a higher `seq` than the device's cursor, per service and household. Unsent local edits are laid back on top of what comes down, so a pull never undoes something you just did.
+- **Rejected ops** (validation or permission, e.g. editing someone else's expense) are reverted to the server's version and a toast says so.
+- **Who you are** is per household (`myId()` in `stores/household.ts`); the device gets a token the first time it's online. Other phones join with an invite code (Household → Phones and devices).
+- **Offline**: the service worker serves the app, the stores serve the data, the outbox holds the changes. The banner shows while the server can't be reached; Config → This device shows the sync state.
+
+Demo data is seeded on first launch (with ids unique to the device) and uploaded like anything else. *Config → Reset this device* wipes the device and its link to its households; they carry on for everyone else.
+
+The stores follow the backend contract: money in integer cents (D-06), repeat rules as RRULE strings (D-07, `src/lib/repeat.ts`), records scoped by `householdId`. Mutations return an undo function, which the UI uses for "Undo" toasts instead of confirmation dialogs.
 
 ## Design system
 
