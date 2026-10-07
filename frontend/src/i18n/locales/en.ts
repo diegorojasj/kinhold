@@ -181,6 +181,16 @@ export const dict = {
     letsGo: (n: number) => plural('en', n, { one: '1 chore today. Quick win!', other: `${n} chores today. One at a time 💪` }),
     toGo: (n: number) => plural('en', n, { one: 'Just 1 to go!', other: `${n} to go, keep it up!` }),
     allDoneToday: 'All done for today 🎉',
+    startersTitle: 'Start with a classic',
+    starters: {
+      dishes: 'Do the dishes',
+      trash: 'Take out the trash',
+      vacuum: 'Vacuum',
+      laundry: 'Laundry',
+      bathroom: 'Clean the bathroom',
+      plants: 'Water the plants',
+      sheets: 'Change bed sheets',
+    },
   },
   money: {
     title: 'Money',

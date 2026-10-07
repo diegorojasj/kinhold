@@ -182,6 +182,16 @@ export const dict: RawDictionary = {
     letsGo: (n: number) => plural('es', n, { one: '1 tarea hoy. ¡Victoria rápida!', other: `${n} tareas hoy. Una a una 💪` }),
     toGo: (n: number) => plural('es', n, { one: '¡Solo queda 1!', other: `Quedan ${n}, ¡sigue así!` }),
     allDoneToday: 'Todo hecho por hoy 🎉',
+    startersTitle: 'Empieza con un clásico',
+    starters: {
+      dishes: 'Lavar los platos',
+      trash: 'Sacar la basura',
+      vacuum: 'Aspirar',
+      laundry: 'Lavar la ropa',
+      bathroom: 'Limpiar el baño',
+      plants: 'Regar las plantas',
+      sheets: 'Cambiar las sábanas',
+    },
   },
   money: {
     title: 'Dinero',

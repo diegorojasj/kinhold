@@ -6,7 +6,19 @@ import { Avatar, EmptyState, Fab, ProgressRing, SectionTitle, undoToast } from '
 import { formatTime, t } from '@/i18n';
 import { today } from '@/lib/dates';
 import { celebrate, haptic } from '@/lib/feedback';
-import { type Bucket, bucketOf, type Chore, choreEvents, chores, completeChore, householdStreak, removeChore, skipChore, weekScores } from '@/stores/chores';
+import {
+  type Bucket,
+  bucketOf,
+  type Chore,
+  type ChoreInput,
+  choreEvents,
+  chores,
+  completeChore,
+  householdStreak,
+  removeChore,
+  skipChore,
+  weekScores,
+} from '@/stores/chores';
 import { member, members } from '@/stores/household';
 
 import { ChoreCard } from './ChoreCard';
@@ -21,8 +33,21 @@ const SECTIONS: { id: Bucket; label: () => string }[] = [
   { id: 'later', label: () => t('chores.later') },
 ];
 
+type Preset = Pick<ChoreInput, 'title' | 'emoji' | 'rrule'>;
+
+/** One-tap starters for an empty list; they open the editor filled in, so who and when can still change. */
+const STARTERS: { emoji: string; title: () => string; rrule: string }[] = [
+  { emoji: '🍽️', title: () => t('chores.starters.dishes'), rrule: 'FREQ=DAILY' },
+  { emoji: '🗑️', title: () => t('chores.starters.trash'), rrule: 'FREQ=WEEKLY' },
+  { emoji: '🧹', title: () => t('chores.starters.vacuum'), rrule: 'FREQ=WEEKLY' },
+  { emoji: '🧺', title: () => t('chores.starters.laundry'), rrule: 'FREQ=WEEKLY' },
+  { emoji: '🛁', title: () => t('chores.starters.bathroom'), rrule: 'FREQ=WEEKLY' },
+  { emoji: '🪴', title: () => t('chores.starters.plants'), rrule: 'FREQ=DAILY;INTERVAL=3' },
+  { emoji: '🛏️', title: () => t('chores.starters.sheets'), rrule: 'FREQ=WEEKLY;INTERVAL=2' },
+];
+
 const Chores: Component = () => {
-  const sheet = createSheet<{ mode: 'new' } | { mode: 'detail' | 'edit'; id: string }>();
+  const sheet = createSheet<{ mode: 'new'; preset?: Preset } | { mode: 'detail' | 'edit'; id: string }>();
   const current = () => {
     const v = sheet.value();
     return v && v.mode !== 'new' ? chores().find((c) => c.id === v.id) : undefined;
@@ -95,10 +120,29 @@ const Chores: Component = () => {
         when={chores().length}
         fallback={
           <EmptyState emoji="🧹" title={t('chores.emptyTitle')} text={t('chores.empty')}>
-            <button type="button" class="btn-accent" onClick={() => sheet.show({ mode: 'new' })}>
-              <Icon name="plus" class="size-5" stroke={2.25} />
-              {t('chores.new')}
-            </button>
+            <div class="flex flex-col items-center gap-4">
+              <div>
+                <p class="label text-center">{t('chores.startersTitle')}</p>
+                <div class="flex flex-wrap justify-center gap-2">
+                  <For each={STARTERS}>
+                    {(s) => (
+                      <button
+                        type="button"
+                        class="chip gap-1.5 py-2 transition-transform active:scale-95"
+                        onClick={() => sheet.show({ mode: 'new', preset: { title: s.title(), emoji: s.emoji, rrule: s.rrule } })}
+                      >
+                        <span>{s.emoji}</span>
+                        {s.title()}
+                      </button>
+                    )}
+                  </For>
+                </div>
+              </div>
+              <button type="button" class="btn-accent" onClick={() => sheet.show({ mode: 'new' })}>
+                <Icon name="plus" class="size-5" stroke={2.25} />
+                {t('chores.new')}
+              </button>
+            </div>
           </EmptyState>
         }
       >
@@ -218,8 +262,8 @@ const Chores: Component = () => {
               when={v.mode !== 'new' && current()}
               keyed
               fallback={
-                <Show when={v.mode === 'new'}>
-                  <ChoreEditor onDone={sheet.close} />
+                <Show when={v.mode === 'new' && v}>
+                  {(n) => <ChoreEditor preset={n().preset} onDone={sheet.close} />}
                 </Show>
               }
             >

@@ -12,12 +12,18 @@ import { toast } from '@/stores/toast';
 
 /* ── Editor (C1, C2) ────────────────────────────────────────────────── */
 
-export const ChoreEditor: Component<{ chore?: Chore; onDone: () => void; onDelete?: () => void }> = (props) => {
+export const ChoreEditor: Component<{
+  chore?: Chore;
+  /** Starting values for a new chore (from a starter suggestion). */
+  preset?: Pick<ChoreInput, 'title' | 'emoji' | 'rrule'>;
+  onDone: () => void;
+  onDelete?: () => void;
+}> = (props) => {
   const everyone = () => members().map((m) => m.id);
-  const [title, setTitle] = createSignal(props.chore?.title ?? '');
-  const [emoji, setEmoji] = createSignal(props.chore?.emoji ?? CHORE_EMOJI[0]);
+  const [title, setTitle] = createSignal(props.chore?.title ?? props.preset?.title ?? '');
+  const [emoji, setEmoji] = createSignal(props.chore?.emoji ?? props.preset?.emoji ?? CHORE_EMOJI[0]);
   const [dtstart, setDtstart] = createSignal(props.chore ? maxIso(props.chore.nextDue, props.chore.dtstart) : today());
-  const [rrule, setRrule] = createSignal(props.chore?.rrule ?? 'FREQ=WEEKLY');
+  const [rrule, setRrule] = createSignal(props.chore?.rrule ?? props.preset?.rrule ?? 'FREQ=WEEKLY');
   const [mode, setMode] = createSignal<AssigneeMode>(props.chore?.assigneeMode ?? 'fixed');
   const [assignees, setAssignees] = createSignal<string[]>(props.chore?.assignees ?? [myId()]);
   const [invalid, setInvalid] = createSignal(false);
@@ -70,7 +76,7 @@ export const ChoreEditor: Component<{ chore?: Chore; onDone: () => void; onDelet
           placeholder={t('chores.titlePlaceholder')}
           value={title()}
           onInput={(e) => setTitle(e.currentTarget.value)}
-          autofocus={!props.chore}
+          autofocus={!props.chore && !props.preset}
           required
         />
       </div>
