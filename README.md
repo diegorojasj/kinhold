@@ -114,10 +114,10 @@ Household admin is spread across WhatsApp messages, a notes app, Splitwise and m
 
 | # | Decision | Why |
 |---|---|---|
-| D-01 | **Same domain** for API and frontend (Caddy routes paths) | Session cookies + CSRF just work, no CORS, no JWT |
+| D-01 | **Same domain** for API and frontend (Caddy routes paths) | Session cookies + CSRF just work, no CORS, no JWT. *Changed (Oct 6): auth is a per-device bearer token + invite codes, so the native apps work too; still same domain on the web.* |
 | D-02 | **Django Ninja** for the API | Typed schemas (Pydantic), auto OpenAPI docs, async support |
-| D-03 | **`django-mongodb-backend`** (official) for the ORM | Keeps Django admin, auth and the ORM. Fallback if the spike fails: PyMongo directly for domain data, keep auth in MongoDB through the same backend |
-| D-04 | **Valkey Streams** (not plain Pub/Sub) for live updates | Streams keep recent events, so a phone that reconnects can catch up with `Last-Event-ID`. Pub/Sub loses anything sent while offline |
+| D-03 | **`django-mongodb-backend`** (official) for the ORM | Keeps Django admin, auth and the ORM. Fallback if the spike fails: PyMongo directly for domain data, keep auth in MongoDB through the same backend. *Changed (Oct 6): Postgres, one schema per service (see services/README.md).* |
+| D-04 | **Valkey Streams** (not plain Pub/Sub) for live updates | Streams keep recent events, so a phone that reconnects can catch up with `Last-Event-ID`. Pub/Sub loses anything sent while offline. *Changed (Oct 6): Pub/Sub only says "pull now"; catching up is a pull since the device's cursor, which can't lose anything.* |
 | D-05 | **SSE** (not WebSockets) | Updates only go server → client; writes go through normal REST calls. Simpler, works through proxies, reconnects by itself |
 | D-06 | **Money as integer cents** + household currency | No float rounding errors |
 | D-07 | **Repeat rules as RFC 5545 RRULE strings** using `python-dateutil` | Standard, handles edge cases (last day of month, every other week) |
