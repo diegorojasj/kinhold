@@ -1,6 +1,7 @@
 import { addDays, diffDays, maxIso, today, type IsoDate } from '@/lib/dates';
 import { clone, persistedStore, uid } from '@/lib/persist';
 import { SEED } from '@/lib/seed';
+import { arrayCollection } from '@/lib/sync';
 import { nextAfter, nextOnOrAfter, perMonth } from '@/lib/repeat';
 import { log } from './activity';
 import { household, myId, members } from './household';
@@ -70,6 +71,9 @@ const seed = () => {
 
 const store = persistedStore('bills', seed);
 const { state, update } = store;
+
+arrayCollection(store, 'bills', 'bills', (s) => s.bills);
+arrayCollection(store, 'bills', 'payments', (s) => s.payments);
 
 export const bills = () =>
   state.bills.filter((b) => b.householdId === household().id).sort((a, b) => a.nextDue.localeCompare(b.nextDue));
